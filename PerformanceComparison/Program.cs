@@ -472,39 +472,34 @@ static async Task InitializeManyToManyDatabase(DenormalizedManyToManyDbContext c
                 ctx.Status("Прогрев...");
                 await benchmarkService.RunWarmup(context, warmupIterations);
                 
-                /*ctx.Status("Запрос 1: Базовый запрос...");
-                results["1. Базовый запрос (М:М)"] = await benchmarkService.BenchmarkQuery(
-                    "1. Базовый запрос (М:М)", iterations,
-                    async () => await benchmarkService.Query1(context));*/
+                ctx.Status("Запрос 1: Полные данные заказов...");
+                results["1. Полные данные заказов (М:М)"] = await benchmarkService.BenchmarkQuery(
+                    "1. Полные данные заказов (М:М)", iterations,
+                    async () => await benchmarkService.Query1(context));
                 
-                ctx.Status("Запрос 2: Полные данные заказов...");
-                results["2. Полные данные заказов (М:М)"] = await benchmarkService.BenchmarkQuery(
-                    "2. Полные данные заказов (М:М)", iterations,
-                    async () => await benchmarkService.QueryFullOrders(context));
-                
-                ctx.Status("Запрос 3: Фильтр по статусу...");
-                results["3. Фильтр по статусу 'NEW' (М:М)"] = await benchmarkService.BenchmarkQuery(
-                    "3. Фильтр по статусу 'NEW' (М:М)", iterations,
+                ctx.Status("Запрос 2: Фильтр по статусу...");
+                results["2. Фильтр по статусу 'NEW' (М:М)"] = await benchmarkService.BenchmarkQuery(
+                    "2. Фильтр по статусу 'NEW' (М:М)", iterations,
                     async () => await benchmarkService.Query2(context));
                 
-                ctx.Status("Запрос 4: Сложная фильтрация...");
-                results["4. Сложная фильтрация (М:М)"] = await benchmarkService.BenchmarkQuery(
-                    "4. Сложная фильтрация (М:М)", iterations,
+                ctx.Status("Запрос 3: Сложная фильтрация...");
+                results["3. Сложная фильтрация (М:М)"] = await benchmarkService.BenchmarkQuery(
+                    "3. Сложная фильтрация (М:М)", iterations,
                     async () => await benchmarkService.Query3(context));
                 
-                ctx.Status("Запрос 5: Группировка...");
-                results["5. Группировка по статусам (М:М)"] = await benchmarkService.BenchmarkQuery(
-                    "5. Группировка по статусам (М:М)", iterations,
+                ctx.Status("Запрос 4: Группировка...");
+                results["4. Группировка по статусам (М:М)"] = await benchmarkService.BenchmarkQuery(
+                    "4. Группировка по статусам (М:М)", iterations,
                     async () => await benchmarkService.Query4(context));
                 
-                ctx.Status("Запрос 6: Поиск по номеру...");
-                results["6. Поиск по номеру (М:М)"] = await benchmarkService.BenchmarkQuery(
-                    "6. Поиск по номеру (М:М)", iterations,
+                ctx.Status("Запрос 5: Поиск по номеру...");
+                results["5. Поиск по номеру (М:М)"] = await benchmarkService.BenchmarkQuery(
+                    "5. Поиск по номеру (М:М)", iterations,
                     async () => await benchmarkService.Query5(context));
                 
-                ctx.Status("Запрос 7: Статистика по типам оплаты...");
-                results["7. Статистика по типам оплаты (М:М)"] = await benchmarkService.BenchmarkQuery(
-                    "7. Статистика по типам оплаты (М:М)", iterations,
+                ctx.Status("Запрос 6: Статистика по типам оплаты...");
+                results["6. Статистика по типам оплаты (М:М)"] = await benchmarkService.BenchmarkQuery(
+                    "6. Статистика по типам оплаты (М:М)", iterations,
                     async () => await benchmarkService.Query6(context));
                 
                 return results;
@@ -526,12 +521,12 @@ static async Task InitializeManyToManyDatabase(DenormalizedManyToManyDbContext c
         // Сопоставление запросов
         var queryMapping = new Dictionary<string, (string norm, string denorm, string mtm)>
         {
-            ["Все заказы"] = ("1. Все заказы с данными", "1. Все заказы с данными", "2. Полные данные заказов (М:М)"),
-            ["Фильтр по статусу"] = ("2. Фильтр по статусу 'NEW'", "2. Фильтр по статусу 'NEW'", "3. Фильтр по статусу 'NEW' (М:М)"),
-            ["Сложная фильтрация"] = ("3. Сложная фильтрация", "3. Сложная фильтрация", "4. Сложная фильтрация (М:М)"),
-            ["Группировка"] = ("4. Группировка по статусам", "4. Группировка по статусам", "5. Группировка по статусам (М:М)"),
-            ["Поиск по номеру"] = ("5. Поиск по номеру", "5. Поиск по номеру", "6. Поиск по номеру (М:М)"),
-            ["Статистика по типам оплаты"] = ("6. Статистика по типам оплаты", "6. Статистика по типам оплаты", "7. Статистика по типам оплаты (М:М)")
+            ["Все заказы"] = ("1. Все заказы с данными", "1. Все заказы с данными", "1. Полные данные заказов (М:М)"),
+            ["Фильтр по статусу"] = ("2. Фильтр по статусу 'NEW'", "2. Фильтр по статусу 'NEW'", "2. Фильтр по статусу 'NEW' (М:М)"),
+            ["Сложная фильтрация"] = ("3. Сложная фильтрация", "3. Сложная фильтрация", "3. Сложная фильтрация (М:М)"),
+            ["Группировка"] = ("4. Группировка по статусам", "4. Группировка по статусам", "4. Группировка по статусам (М:М)"),
+            ["Поиск по номеру"] = ("5. Поиск по номеру", "5. Поиск по номеру", "5. Поиск по номеру (М:М)"),
+            ["Статистика по типам оплаты"] = ("6. Статистика по типам оплаты", "6. Статистика по типам оплаты", "6. Статистика по типам оплаты (М:М)")
         };
         
         foreach (var mapping in queryMapping)

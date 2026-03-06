@@ -40,22 +40,10 @@ public class DenormalizedManyToManyBenchmarkService
         return Math.Sqrt(sum / values.Count);
     }
     
-    // Запрос 1: Получить все заказы с полной информацией (требуется 5 JOIN)
-    public async Task<int> Query1(DenormalizedManyToManyDbContext context)
-    {
-        var result = await (from o in context.Orders
-                           join ov in context.OrderDictionaryValues on o.Id equals ov.OrderId
-                           join de in context.DictionaryEntries on ov.DictionaryEntryId equals de.Id
-                           where ov.DictionaryType == "OrderType"
-                           select new { o, de })
-                           .Take(100)
-                           .ToListAsync();
-        
-        return result.Count;
-    }
+    
     
     // Запрос 2: Получить все заказы со всеми атрибутами (сложный)
-    public async Task<int> QueryFullOrders(DenormalizedManyToManyDbContext context)
+    public async Task<int> Query1(DenormalizedManyToManyDbContext context)
     {
         var result = await context.Orders
             .Select(o => new
@@ -147,6 +135,8 @@ public class DenormalizedManyToManyBenchmarkService
             .FirstOrDefaultAsync();
             
         var result = await context.Orders
+            .Include(o => o.DictionaryValues)  
+            .ThenInclude(dv => dv.DictionaryEntry)  
             .Where(o => o.OrderNumber == orderNumber)
             .FirstOrDefaultAsync();
         
