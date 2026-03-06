@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using DenormalizedManyToMany = DatabaseCommon.Models.DenormalizedModels.DenormalizedManyToMany;
 using DenormalizedModels = DatabaseCommon.Models.DenormalizedModels;
 using NormalizedModels = DatabaseCommon.Models.NormalizedModels;
-
+using DenormalizedManyToManyWithEnum = DatabaseCommon.Models.DenormalizedManyToManyWithEnum;
+using NormalizedWithEnumModels = DatabaseCommon.Models.NormalizedWithEnumModels;
 
 
 namespace OrderSystemComparison.Data;
@@ -94,8 +95,6 @@ public class DenormalizedDbContext : DbContext
     }
 }
 
-
-
 public class DenormalizedManyToManyDbContext : DbContext
 {
     public DenormalizedManyToManyDbContext(DbContextOptions<DenormalizedManyToManyDbContext> options) : base(options) { }
@@ -145,5 +144,105 @@ public class DenormalizedManyToManyDbContext : DbContext
             .WithMany(de => de.OrderValues)
             .HasForeignKey(odv => odv.DictionaryEntryId)
             .OnDelete(DeleteBehavior.Restrict); // Не удаляем записи справочника, если они используются
+    }
+}
+
+public class DenormalizedManyToManyWithEnumDbContext : DbContext
+{
+    public DenormalizedManyToManyWithEnumDbContext(DbContextOptions<DenormalizedManyToManyWithEnumDbContext> options) : base(options) { }
+    
+    public DbSet<DenormalizedManyToManyWithEnum.DictionaryEntry> DictionaryEntries { get; set; }
+    public DbSet<DenormalizedManyToManyWithEnum.Order> Orders { get; set; }
+    public DbSet<DenormalizedManyToManyWithEnum.OrderDictionaryValue> OrderDictionaryValues { get; set; }
+    
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // Конфигурация для DictionaryEntry
+        modelBuilder.Entity<DenormalizedManyToManyWithEnum.DictionaryEntry>()
+            .HasIndex(de => new { de.DictionaryType, de.Code })
+            .IsUnique();
+        
+        // Храним enum как int в БД (более эффективно)
+        modelBuilder.Entity<DenormalizedManyToManyWithEnum.DictionaryEntry>()
+            .Property(e => e.DictionaryType)
+            .HasConversion<int>();
+        
+        // Конфигурация для Order
+        modelBuilder.Entity<DenormalizedManyToManyWithEnum.Order>()
+            .HasIndex(o => o.OrderNumber)
+            .IsUnique();
+        
+        // Конфигурация для OrderDictionaryValue
+        modelBuilder.Entity<DenormalizedManyToManyWithEnum.OrderDictionaryValue>()
+            .HasIndex(odv => new { odv.OrderId, odv.DictionaryType })
+            .HasDatabaseName("IX_OrderDictionaryValue_Order_Type");
+        
+        // Храним enum как int
+        modelBuilder.Entity<DenormalizedManyToManyWithEnum.OrderDictionaryValue>()
+            .Property(odv => odv.DictionaryType)
+            .HasConversion<int>();
+        
+        // Связи
+        modelBuilder.Entity<DenormalizedManyToManyWithEnum.OrderDictionaryValue>()
+            .HasOne(odv => odv.Order)
+            .WithMany(o => o.DictionaryValues)
+            .HasForeignKey(odv => odv.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<DenormalizedManyToManyWithEnum.OrderDictionaryValue>()
+            .HasOne(odv => odv.DictionaryEntry)
+            .WithMany(de => de.OrderValues)
+            .HasForeignKey(odv => odv.DictionaryEntryId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+// OrderSystemComparison.Data/DbContexts.cs
+public class NormalizedWithEnumDbContext : DbContext
+{
+    public NormalizedWithEnumDbContext(DbContextOptions<NormalizedWithEnumDbContext> options) : base(options) { }
+    
+    public DbSet<NormalizedWithEnumModels.Order> Orders { get; set; }
+    
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // Индексы для заказов
+        modelBuilder.Entity<NormalizedWithEnumModels.Order>()
+            .HasIndex(o => o.OrderNumber)
+            .IsUnique();
+            
+        modelBuilder.Entity<NormalizedWithEnumModels.Order>()
+            .HasIndex(o => o.OrderDate);
+        
+        // Индексы для enum полей (для ускорения фильтрации)
+        modelBuilder.Entity<NormalizedWithEnumModels.Order>()
+            .HasIndex(o => o.OrderStatus);
+        
+        modelBuilder.Entity<NormalizedWithEnumModels.Order>()
+            .HasIndex(o => o.OrderType);
+        
+        modelBuilder.Entity<NormalizedWithEnumModels.Order>()
+            .HasIndex(o => o.PaymentType);
+        
+        // Храним enum как int в БД
+        modelBuilder.Entity<NormalizedWithEnumModels.Order>()
+            .Property(o => o.OrderType)
+            .HasConversion<int>();
+        
+        modelBuilder.Entity<NormalizedWithEnumModels.Order>()
+            .Property(o => o.DeliveryType)
+            .HasConversion<int>();
+        
+        modelBuilder.Entity<NormalizedWithEnumModels.Order>()
+            .Property(o => o.OrderStatus)
+            .HasConversion<int>();
+        
+        modelBuilder.Entity<NormalizedWithEnumModels.Order>()
+            .Property(o => o.PaymentStatus)
+            .HasConversion<int>();
+        
+        modelBuilder.Entity<NormalizedWithEnumModels.Order>()
+            .Property(o => o.PaymentType)
+            .HasConversion<int>();
     }
 }

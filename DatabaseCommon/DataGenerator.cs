@@ -3,6 +3,10 @@ using DatabaseCommon.Models;
 using DenormalizedManyToMany = DatabaseCommon.Models.DenormalizedModels.DenormalizedManyToMany;
 using DenormalizedModels = DatabaseCommon.Models.DenormalizedModels;
 using NormalizedModels = DatabaseCommon.Models.NormalizedModels;
+using DenormalizedManyToManyWithEnum = DatabaseCommon.Models.DenormalizedManyToManyWithEnum;
+using NormalizedWithEnumModels = DatabaseCommon.Models.NormalizedWithEnumModels;
+
+
 namespace OrderSystemComparison.Data;
 
 public static class DataGenerator
@@ -18,7 +22,7 @@ public static class DataGenerator
             new() { Code = "GIFT", Name = "Подарочный", Description = "Подарочный заказ" }
         };
     }
-    
+
     public static List<NormalizedModels.DeliveryType> GenerateDeliveryTypes()
     {
         return new List<NormalizedModels.DeliveryType>
@@ -30,7 +34,7 @@ public static class DataGenerator
             new() { Code = "INTERNATIONAL", Name = "Международная", BasePrice = 1500, EstimatedDays = 14 }
         };
     }
-    
+
     public static List<NormalizedModels.OrderStatus> GenerateOrderStatuses()
     {
         return new List<NormalizedModels.OrderStatus>
@@ -44,7 +48,7 @@ public static class DataGenerator
             new() { Code = "RETURNED", Name = "Возврат", ColorCode = "#e67e22", SortOrder = 70 }
         };
     }
-    
+
     public static List<NormalizedModels.PaymentStatus> GeneratePaymentStatuses()
     {
         return new List<NormalizedModels.PaymentStatus>
@@ -56,7 +60,7 @@ public static class DataGenerator
             new() { Code = "FAILED", Name = "Ошибка оплаты", IsPaid = false }
         };
     }
-    
+
     public static List<NormalizedModels.PaymentType> GeneratePaymentTypes()
     {
         return new List<NormalizedModels.PaymentType>
@@ -68,7 +72,7 @@ public static class DataGenerator
             new() { Code = "CRYPTO", Name = "Криптовалюта", Commission = 0.5m }
         };
     }
-    
+
     public static List<DenormalizedModels.DictionaryEntry> ConvertToDictionaryEntries(
         List<NormalizedModels.OrderType> orderTypes,
         List<NormalizedModels.DeliveryType> deliveryTypes,
@@ -77,7 +81,7 @@ public static class DataGenerator
         List<NormalizedModels.PaymentType> paymentTypes)
     {
         var entries = new List<DenormalizedModels.DictionaryEntry>();
-        
+
         foreach (var item in orderTypes)
         {
             entries.Add(new DenormalizedModels.DictionaryEntry
@@ -88,7 +92,7 @@ public static class DataGenerator
                 AdditionalData = $"{{\"Description\":\"{item.Description}\"}}"
             });
         }
-        
+
         foreach (var item in deliveryTypes)
         {
             entries.Add(new DenormalizedModels.DictionaryEntry
@@ -99,7 +103,7 @@ public static class DataGenerator
                 AdditionalData = $"{{\"BasePrice\":{item.BasePrice},\"EstimatedDays\":{item.EstimatedDays}}}"
             });
         }
-        
+
         foreach (var item in orderStatuses)
         {
             entries.Add(new DenormalizedModels.DictionaryEntry
@@ -110,7 +114,7 @@ public static class DataGenerator
                 AdditionalData = $"{{\"ColorCode\":\"{item.ColorCode}\",\"SortOrder\":{item.SortOrder}}}"
             });
         }
-        
+
         foreach (var item in paymentStatuses)
         {
             entries.Add(new DenormalizedModels.DictionaryEntry
@@ -121,7 +125,7 @@ public static class DataGenerator
                 AdditionalData = $"{{\"IsPaid\":{item.IsPaid.ToString().ToLower()}}}"
             });
         }
-        
+
         foreach (var item in paymentTypes)
         {
             entries.Add(new DenormalizedModels.DictionaryEntry
@@ -132,10 +136,10 @@ public static class DataGenerator
                 AdditionalData = $"{{\"Commission\":{item.Commission}}}"
             });
         }
-        
+
         return entries;
     }
-    
+
     public static List<NormalizedModels.Order> GenerateNormalizedOrders(
         List<NormalizedModels.OrderType> orderTypes,
         List<NormalizedModels.DeliveryType> deliveryTypes,
@@ -147,15 +151,15 @@ public static class DataGenerator
         var faker = new Faker();
         var orders = new List<NormalizedModels.Order>();
         var random = new Random();
-        
+
         // Устанавливаем фиксированную дату для всех заказов, чтобы избежать проблем с часовыми поясами
         var baseDate = DateTime.UtcNow.AddYears(-1);
-        
+
         for (int i = 0; i < count; i++)
         {
             // Генерируем дату в UTC
             var orderDate = baseDate.AddDays(random.Next(0, 365));
-            
+
             orders.Add(new NormalizedModels.Order
             {
                 OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMdd}-{i:D6}",
@@ -169,11 +173,11 @@ public static class DataGenerator
                 PaymentTypeId = faker.PickRandom(paymentTypes).Id
             });
         }
-        
+
         return orders;
     }
-    
-public static List<DenormalizedModels.Order> GenerateDenormalizedOrders(
+
+    public static List<DenormalizedModels.Order> GenerateDenormalizedOrders(
         List<DenormalizedModels.DictionaryEntry> dictionaryEntries,
         int count)
     {
@@ -182,14 +186,14 @@ public static List<DenormalizedModels.Order> GenerateDenormalizedOrders(
         var orderStatuses = dictionaryEntries.Where(e => e.DictionaryType == "OrderStatus").ToList();
         var paymentStatuses = dictionaryEntries.Where(e => e.DictionaryType == "PaymentStatus").ToList();
         var paymentTypes = dictionaryEntries.Where(e => e.DictionaryType == "PaymentType").ToList();
-        
+
         var faker = new Faker();
         var orders = new List<DenormalizedModels.Order>();
         var random = new Random();
-        
+
         // Устанавливаем фиксированную дату для всех заказов
         var baseDate = DateTime.UtcNow.AddYears(-1);
-        
+
         for (int i = 0; i < count; i++)
         {
             var orderType = faker.PickRandom(orderTypes);
@@ -197,10 +201,10 @@ public static List<DenormalizedModels.Order> GenerateDenormalizedOrders(
             var orderStatus = faker.PickRandom(orderStatuses);
             var paymentStatus = faker.PickRandom(paymentStatuses);
             var paymentType = faker.PickRandom(paymentTypes);
-            
+
             // Генерируем дату в UTC
             var orderDate = baseDate.AddDays(random.Next(0, 365));
-            
+
             orders.Add(new DenormalizedModels.Order()
             {
                 OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMdd}-{i:D6}",
@@ -219,99 +223,350 @@ public static List<DenormalizedModels.Order> GenerateDenormalizedOrders(
                 PaymentTypeName = paymentType.Value
             });
         }
-        
+
         return orders;
     }
 
 
-public static List<DenormalizedManyToMany.OrderDictionaryValue> GenerateOrderDictionaryValues(
-    List<DenormalizedManyToMany.Order> orders,
-    List<DenormalizedManyToMany.DictionaryEntry> dictionaryEntries,
-    Dictionary<string, List<DenormalizedManyToMany.DictionaryEntry>> entriesByType)
-{
-    var orderValues = new List<DenormalizedManyToMany.OrderDictionaryValue>();
-    var random = new Random();
-    
-    foreach (var order in orders)
+    public static List<DenormalizedManyToMany.OrderDictionaryValue> GenerateOrderDictionaryValues(
+        List<DenormalizedManyToMany.Order> orders,
+        List<DenormalizedManyToMany.DictionaryEntry> dictionaryEntries,
+        Dictionary<string, List<DenormalizedManyToMany.DictionaryEntry>> entriesByType)
     {
-        // Для каждого заказа добавляем по одному значению каждого типа
-        // Тип заказа
-        var orderType = entriesByType["OrderType"][random.Next(entriesByType["OrderType"].Count)];
-        orderValues.Add(new DenormalizedManyToMany.OrderDictionaryValue
+        var orderValues = new List<DenormalizedManyToMany.OrderDictionaryValue>();
+        var random = new Random();
+
+        foreach (var order in orders)
         {
-            OrderId = order.Id,
-            DictionaryEntryId = orderType.Id,
-            DictionaryType = "OrderType"
-        });
+            // Для каждого заказа добавляем по одному значению каждого типа
+            // Тип заказа
+            var orderType = entriesByType["OrderType"][random.Next(entriesByType["OrderType"].Count)];
+            orderValues.Add(new DenormalizedManyToMany.OrderDictionaryValue
+            {
+                OrderId = order.Id,
+                DictionaryEntryId = orderType.Id,
+                DictionaryType = "OrderType"
+            });
+
+            // Тип доставки
+            var deliveryType = entriesByType["DeliveryType"][random.Next(entriesByType["DeliveryType"].Count)];
+            orderValues.Add(new DenormalizedManyToMany.OrderDictionaryValue
+            {
+                OrderId = order.Id,
+                DictionaryEntryId = deliveryType.Id,
+                DictionaryType = "DeliveryType"
+            });
+
+            // Статус заказа
+            var orderStatus = entriesByType["OrderStatus"][random.Next(entriesByType["OrderStatus"].Count)];
+            orderValues.Add(new DenormalizedManyToMany.OrderDictionaryValue
+            {
+                OrderId = order.Id,
+                DictionaryEntryId = orderStatus.Id,
+                DictionaryType = "OrderStatus"
+            });
+
+            // Статус оплаты
+            var paymentStatus = entriesByType["PaymentStatus"][random.Next(entriesByType["PaymentStatus"].Count)];
+            orderValues.Add(new DenormalizedManyToMany.OrderDictionaryValue
+            {
+                OrderId = order.Id,
+                DictionaryEntryId = paymentStatus.Id,
+                DictionaryType = "PaymentStatus"
+            });
+
+            // Тип оплаты
+            var paymentType = entriesByType["PaymentType"][random.Next(entriesByType["PaymentType"].Count)];
+            orderValues.Add(new DenormalizedManyToMany.OrderDictionaryValue
+            {
+                OrderId = order.Id,
+                DictionaryEntryId = paymentType.Id,
+                DictionaryType = "PaymentType"
+            });
+        }
+
+        return orderValues;
+    }
+
+    public static List<DenormalizedManyToMany.Order> GenerateDenormalizedManyToManyOrders(
+        List<DenormalizedManyToMany.DictionaryEntry> dictionaryEntries,
+        int count)
+    {
+        var faker = new Faker();
+        var orders = new List<DenormalizedManyToMany.Order>();
+        var random = new Random();
+
+        // Группируем записи справочника по типам для удобства
+        var entriesByType = dictionaryEntries
+            .GroupBy(e => e.DictionaryType)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var baseDate = DateTime.UtcNow.AddYears(-1);
+
+        for (int i = 0; i < count; i++)
+        {
+            var orderDate = baseDate.AddDays(random.Next(0, 365));
+
+            orders.Add(new DenormalizedManyToMany.Order
+            {
+                OrderNumber = $"ORD-MTM-{DateTime.UtcNow:yyyyMMdd}-{i:D6}",
+                OrderDate = DateTime.SpecifyKind(orderDate, DateTimeKind.Utc),
+                TotalAmount = Math.Round(faker.Random.Decimal(100, 10000), 2),
+                CustomerComment = faker.Random.Bool(0.3f) ? faker.Lorem.Sentence() : null
+            });
+        }
+
+        return orders;
+    }
+
+
+    public static List<DenormalizedManyToManyWithEnum.DictionaryEntry> GenerateDictionaryEntriesWithEnum(
+        List<NormalizedModels.OrderType> orderTypes,
+        List<NormalizedModels.DeliveryType> deliveryTypes,
+        List<NormalizedModels.OrderStatus> orderStatuses,
+        List<NormalizedModels.PaymentStatus> paymentStatuses,
+        List<NormalizedModels.PaymentType> paymentTypes)
+    {
+        var entries = new List<DenormalizedManyToManyWithEnum.DictionaryEntry>();
+
+        foreach (var item in orderTypes)
+        {
+            entries.Add(new DenormalizedManyToManyWithEnum.DictionaryEntry
+            {
+                DictionaryType = DenormalizedManyToManyWithEnum.DictionaryType.OrderType,
+                Code = item.Code,
+                Value = item.Name,
+                AdditionalData = $"{{\"Description\":\"{item.Description}\"}}"
+            });
+        }
+
+        foreach (var item in deliveryTypes)
+        {
+            entries.Add(new DenormalizedManyToManyWithEnum.DictionaryEntry
+            {
+                DictionaryType = DenormalizedManyToManyWithEnum.DictionaryType.DeliveryType,
+                Code = item.Code,
+                Value = item.Name,
+                AdditionalData = $"{{\"BasePrice\":{item.BasePrice},\"EstimatedDays\":{item.EstimatedDays}}}"
+            });
+        }
+
+        foreach (var item in orderStatuses)
+        {
+            entries.Add(new DenormalizedManyToManyWithEnum.DictionaryEntry
+            {
+                DictionaryType = DenormalizedManyToManyWithEnum.DictionaryType.OrderStatus,
+                Code = item.Code,
+                Value = item.Name,
+                AdditionalData = $"{{\"ColorCode\":\"{item.ColorCode}\",\"SortOrder\":{item.SortOrder}}}"
+            });
+        }
+
+        foreach (var item in paymentStatuses)
+        {
+            entries.Add(new DenormalizedManyToManyWithEnum.DictionaryEntry
+            {
+                DictionaryType = DenormalizedManyToManyWithEnum.DictionaryType.PaymentStatus,
+                Code = item.Code,
+                Value = item.Name,
+                AdditionalData = $"{{\"IsPaid\":{item.IsPaid.ToString().ToLower()}}}"
+            });
+        }
+
+        foreach (var item in paymentTypes)
+        {
+            entries.Add(new DenormalizedManyToManyWithEnum.DictionaryEntry
+            {
+                DictionaryType = DenormalizedManyToManyWithEnum.DictionaryType.PaymentType,
+                Code = item.Code,
+                Value = item.Name,
+                AdditionalData = $"{{\"Commission\":{item.Commission}}}"
+            });
+        }
+
+        return entries;
+    }
+
+    public static List<DenormalizedManyToManyWithEnum.Order> GenerateDenormalizedManyToManyWithEnumOrders(
+        List<DenormalizedManyToManyWithEnum.DictionaryEntry> dictionaryEntries,
+        int count)
+    {
+        var faker = new Faker();
+        var orders = new List<DenormalizedManyToManyWithEnum.Order>();
+        var random = new Random();
+
+        var baseDate = DateTime.UtcNow.AddYears(-1);
+
+        for (int i = 0; i < count; i++)
+        {
+            var orderDate = baseDate.AddDays(random.Next(0, 365));
+
+            orders.Add(new DenormalizedManyToManyWithEnum.Order
+            {
+                OrderNumber = $"ORD-ENUM-{DateTime.UtcNow:yyyyMMdd}-{i:D6}",
+                OrderDate = DateTime.SpecifyKind(orderDate, DateTimeKind.Utc),
+                TotalAmount = Math.Round(faker.Random.Decimal(100, 10000), 2),
+                CustomerComment = faker.Random.Bool(0.3f) ? faker.Lorem.Sentence() : null
+            });
+        }
+
+        return orders;
+    }
+
+    public static List<DenormalizedManyToManyWithEnum.OrderDictionaryValue> GenerateOrderDictionaryValuesWithEnum(
+        List<DenormalizedManyToManyWithEnum.Order> orders,
+        List<DenormalizedManyToManyWithEnum.DictionaryEntry> dictionaryEntries,
+        Dictionary<DenormalizedManyToManyWithEnum.DictionaryType, List<DenormalizedManyToManyWithEnum.DictionaryEntry>>
+            entriesByType)
+    {
+        var orderValues = new List<DenormalizedManyToManyWithEnum.OrderDictionaryValue>();
+        var random = new Random();
+
+        foreach (var order in orders)
+        {
+            // Тип заказа
+            var orderType = entriesByType[DenormalizedManyToManyWithEnum.DictionaryType.OrderType][
+                random.Next(entriesByType[DenormalizedManyToManyWithEnum.DictionaryType.OrderType].Count)];
+            orderValues.Add(new DenormalizedManyToManyWithEnum.OrderDictionaryValue
+            {
+                OrderId = order.Id,
+                DictionaryEntryId = orderType.Id,
+                DictionaryType = DenormalizedManyToManyWithEnum.DictionaryType.OrderType
+            });
+
+            // Тип доставки
+            var deliveryType = entriesByType[DenormalizedManyToManyWithEnum.DictionaryType.DeliveryType][
+                random.Next(entriesByType[DenormalizedManyToManyWithEnum.DictionaryType.DeliveryType].Count)];
+            orderValues.Add(new DenormalizedManyToManyWithEnum.OrderDictionaryValue
+            {
+                OrderId = order.Id,
+                DictionaryEntryId = deliveryType.Id,
+                DictionaryType = DenormalizedManyToManyWithEnum.DictionaryType.DeliveryType
+            });
+
+            // Статус заказа
+            var orderStatus = entriesByType[DenormalizedManyToManyWithEnum.DictionaryType.OrderStatus][
+                random.Next(entriesByType[DenormalizedManyToManyWithEnum.DictionaryType.OrderStatus].Count)];
+            orderValues.Add(new DenormalizedManyToManyWithEnum.OrderDictionaryValue
+            {
+                OrderId = order.Id,
+                DictionaryEntryId = orderStatus.Id,
+                DictionaryType = DenormalizedManyToManyWithEnum.DictionaryType.OrderStatus
+            });
+
+            // Статус оплаты
+            var paymentStatus = entriesByType[DenormalizedManyToManyWithEnum.DictionaryType.PaymentStatus][
+                random.Next(entriesByType[DenormalizedManyToManyWithEnum.DictionaryType.PaymentStatus].Count)];
+            orderValues.Add(new DenormalizedManyToManyWithEnum.OrderDictionaryValue
+            {
+                OrderId = order.Id,
+                DictionaryEntryId = paymentStatus.Id,
+                DictionaryType = DenormalizedManyToManyWithEnum.DictionaryType.PaymentStatus
+            });
+
+            // Тип оплаты
+            var paymentType = entriesByType[DenormalizedManyToManyWithEnum.DictionaryType.PaymentType][
+                random.Next(entriesByType[DenormalizedManyToManyWithEnum.DictionaryType.PaymentType].Count)];
+            orderValues.Add(new DenormalizedManyToManyWithEnum.OrderDictionaryValue
+            {
+                OrderId = order.Id,
+                DictionaryEntryId = paymentType.Id,
+                DictionaryType = DenormalizedManyToManyWithEnum.DictionaryType.PaymentType
+            });
+        }
+
+        return orderValues;
+    }
+public static List<NormalizedWithEnumModels.Order> GenerateNormalizedWithEnumOrders(int count)
+    {
+        var faker = new Faker();
+        var orders = new List<NormalizedWithEnumModels.Order>();
+        var random = new Random();
         
-        // Тип доставки
-        var deliveryType = entriesByType["DeliveryType"][random.Next(entriesByType["DeliveryType"].Count)];
-        orderValues.Add(new DenormalizedManyToMany.OrderDictionaryValue
-        {
-            OrderId = order.Id,
-            DictionaryEntryId = deliveryType.Id,
-            DictionaryType = "DeliveryType"
-        });
+        var baseDate = DateTime.UtcNow.AddYears(-1);
         
-        // Статус заказа
-        var orderStatus = entriesByType["OrderStatus"][random.Next(entriesByType["OrderStatus"].Count)];
-        orderValues.Add(new DenormalizedManyToMany.OrderDictionaryValue
+        // Предопределенные данные для JSON полей
+        var orderTypesData = new Dictionary<NormalizedWithEnumModels.OrderTypeEnum, string>
         {
-            OrderId = order.Id,
-            DictionaryEntryId = orderStatus.Id,
-            DictionaryType = "OrderStatus"
-        });
+            [NormalizedWithEnumModels.OrderTypeEnum.Standard] = "{\"Description\":\"Обычный заказ\"}",
+            [NormalizedWithEnumModels.OrderTypeEnum.Preorder] = "{\"Description\":\"Заказ товара под заказ\"}",
+            [NormalizedWithEnumModels.OrderTypeEnum.Express] = "{\"Description\":\"Заказ срочной доставки\"}",
+            [NormalizedWithEnumModels.OrderTypeEnum.Wholesale] = "{\"Description\":\"Оптовая продажа\"}",
+            [NormalizedWithEnumModels.OrderTypeEnum.Gift] = "{\"Description\":\"Подарочный заказ\"}"
+        };
         
-        // Статус оплаты
-        var paymentStatus = entriesByType["PaymentStatus"][random.Next(entriesByType["PaymentStatus"].Count)];
-        orderValues.Add(new DenormalizedManyToMany.OrderDictionaryValue
+        var deliveryTypesData = new Dictionary<NormalizedWithEnumModels.DeliveryTypeEnum, string>
         {
-            OrderId = order.Id,
-            DictionaryEntryId = paymentStatus.Id,
-            DictionaryType = "PaymentStatus"
-        });
+            [NormalizedWithEnumModels.DeliveryTypeEnum.Courier] = "{\"BasePrice\":300,\"EstimatedDays\":1}",
+            [NormalizedWithEnumModels.DeliveryTypeEnum.Pickup] = "{\"BasePrice\":0,\"EstimatedDays\":1}",
+            [NormalizedWithEnumModels.DeliveryTypeEnum.Post] = "{\"BasePrice\":200,\"EstimatedDays\":7}",
+            [NormalizedWithEnumModels.DeliveryTypeEnum.Express] = "{\"BasePrice\":500,\"EstimatedDays\":1}",
+            [NormalizedWithEnumModels.DeliveryTypeEnum.International] = "{\"BasePrice\":1500,\"EstimatedDays\":14}"
+        };
         
-        // Тип оплаты
-        var paymentType = entriesByType["PaymentType"][random.Next(entriesByType["PaymentType"].Count)];
-        orderValues.Add(new DenormalizedManyToMany.OrderDictionaryValue
+        var orderStatusesData = new Dictionary<NormalizedWithEnumModels.OrderStatusEnum, string>
         {
-            OrderId = order.Id,
-            DictionaryEntryId = paymentType.Id,
-            DictionaryType = "PaymentType"
-        });
+            [NormalizedWithEnumModels.OrderStatusEnum.New] = "{\"ColorCode\":\"#3498db\",\"SortOrder\":10}",
+            [NormalizedWithEnumModels.OrderStatusEnum.Processing] = "{\"ColorCode\":\"#f39c12\",\"SortOrder\":20}",
+            [NormalizedWithEnumModels.OrderStatusEnum.Confirmed] = "{\"ColorCode\":\"#2ecc71\",\"SortOrder\":30}",
+            [NormalizedWithEnumModels.OrderStatusEnum.Shipped] = "{\"ColorCode\":\"#9b59b6\",\"SortOrder\":40}",
+            [NormalizedWithEnumModels.OrderStatusEnum.Delivered] = "{\"ColorCode\":\"#27ae60\",\"SortOrder\":50}",
+            [NormalizedWithEnumModels.OrderStatusEnum.Cancelled] = "{\"ColorCode\":\"#e74c3c\",\"SortOrder\":60}",
+            [NormalizedWithEnumModels.OrderStatusEnum.Returned] = "{\"ColorCode\":\"#e67e22\",\"SortOrder\":70}"
+        };
+        
+        var paymentStatusesData = new Dictionary<NormalizedWithEnumModels.PaymentStatusEnum, string>
+        {
+            [NormalizedWithEnumModels.PaymentStatusEnum.Pending] = "{\"IsPaid\":false}",
+            [NormalizedWithEnumModels.PaymentStatusEnum.Paid] = "{\"IsPaid\":true}",
+            [NormalizedWithEnumModels.PaymentStatusEnum.PartiallyPaid] = "{\"IsPaid\":false}",
+            [NormalizedWithEnumModels.PaymentStatusEnum.Refunded] = "{\"IsPaid\":false}",
+            [NormalizedWithEnumModels.PaymentStatusEnum.Failed] = "{\"IsPaid\":false}"
+        };
+        
+        var paymentTypesData = new Dictionary<NormalizedWithEnumModels.PaymentTypeEnum, string>
+        {
+            [NormalizedWithEnumModels.PaymentTypeEnum.Card] = "{\"Commission\":1.5}",
+            [NormalizedWithEnumModels.PaymentTypeEnum.Cash] = "{\"Commission\":0}",
+            [NormalizedWithEnumModels.PaymentTypeEnum.Online] = "{\"Commission\":1.0}",
+            [NormalizedWithEnumModels.PaymentTypeEnum.Invoice] = "{\"Commission\":0}",
+            [NormalizedWithEnumModels.PaymentTypeEnum.Crypto] = "{\"Commission\":0.5}"
+        };
+        
+        for (int i = 0; i < count; i++)
+        {
+            var orderDate = baseDate.AddDays(random.Next(0, 365));
+            
+            var orderType = faker.PickRandom<NormalizedWithEnumModels.OrderTypeEnum>();
+            var deliveryType = faker.PickRandom<NormalizedWithEnumModels.DeliveryTypeEnum>();
+            var orderStatus = faker.PickRandom<NormalizedWithEnumModels.OrderStatusEnum>();
+            var paymentStatus = faker.PickRandom<NormalizedWithEnumModels.PaymentStatusEnum>();
+            var paymentType = faker.PickRandom<NormalizedWithEnumModels.PaymentTypeEnum>();
+            
+            orders.Add(new NormalizedWithEnumModels.Order
+            {
+                OrderNumber = $"ORD-ENUM-{DateTime.UtcNow:yyyyMMdd}-{i:D6}",
+                OrderDate = DateTime.SpecifyKind(orderDate, DateTimeKind.Utc),
+                TotalAmount = Math.Round(faker.Random.Decimal(100, 10000), 2),
+                CustomerComment = faker.Random.Bool(0.3f) ? faker.Lorem.Sentence() : null,
+                
+                OrderType = orderType,
+                DeliveryType = deliveryType,
+                OrderStatus = orderStatus,
+                PaymentStatus = paymentStatus,
+                PaymentType = paymentType,
+                
+                OrderTypeData = orderTypesData[orderType],
+                DeliveryTypeData = deliveryTypesData[deliveryType],
+                OrderStatusData = orderStatusesData[orderStatus],
+                PaymentStatusData = paymentStatusesData[paymentStatus],
+                PaymentTypeData = paymentTypesData[paymentType]
+            });
+        }
+        
+        return orders;
     }
     
-    return orderValues;
 }
 
-public static List<DenormalizedManyToMany.Order> GenerateDenormalizedManyToManyOrders(
-    List<DenormalizedManyToMany.DictionaryEntry> dictionaryEntries,
-    int count)
-{
-    var faker = new Faker();
-    var orders = new List<DenormalizedManyToMany.Order>();
-    var random = new Random();
-    
-    // Группируем записи справочника по типам для удобства
-    var entriesByType = dictionaryEntries
-        .GroupBy(e => e.DictionaryType)
-        .ToDictionary(g => g.Key, g => g.ToList());
-    
-    var baseDate = DateTime.UtcNow.AddYears(-1);
-    
-    for (int i = 0; i < count; i++)
-    {
-        var orderDate = baseDate.AddDays(random.Next(0, 365));
-        
-        orders.Add(new DenormalizedManyToMany.Order
-        {
-            OrderNumber = $"ORD-MTM-{DateTime.UtcNow:yyyyMMdd}-{i:D6}",
-            OrderDate = DateTime.SpecifyKind(orderDate, DateTimeKind.Utc),
-            TotalAmount = Math.Round(faker.Random.Decimal(100, 10000), 2),
-            CustomerComment = faker.Random.Bool(0.3f) ? faker.Lorem.Sentence() : null
-        });
-    }
-    
-    return orders;
-}
-}
+
