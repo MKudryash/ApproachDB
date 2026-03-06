@@ -1,0 +1,72 @@
+﻿services:
+  approach:
+    image: approach
+    build:
+      context: .
+      dockerfile: Approach/Dockerfile
+
+  badapproach:
+    image: badapproach
+    build:
+      context: .
+      dockerfile: BadApproach/Dockerfile
+
+  postgresshowdown:
+    image: postgresshowdown
+    build:
+      context: .
+      dockerfile: PostgresShowdown/Dockerfile
+
+
+
+  postgres:
+      image: postgres:15-alpine
+      container_name: postgres_showdown_demo
+      environment:
+        POSTGRES_USER: demo_user
+        POSTGRES_PASSWORD: demo_password
+        POSTGRES_DB: demo_db
+      ports:
+        - "5432:5432"
+      volumes:
+        - postgres_data:/var/lib/postgresql/data
+      command:
+        - "postgres"
+        - "-c"
+        - "shared_buffers=512MB"
+        - "-c"
+        - "effective_cache_size=1536MB"
+        - "-c"
+        - "work_mem=32MB"
+        - "-c"
+        - "maintenance_work_mem=128MB"
+        - "-c"
+        - "max_connections=200"
+volumes:
+  postgres_data:
+    name: postgres_showdown_data
+
+  databasecommon:
+    image: databasecommon
+    build:
+      context: .
+      dockerfile: DatabaseCommon/Dockerfile
+
+  normalizedapp:
+    image: normalizedapp
+    build:
+      context: .
+      dockerfile: NormalizedApp/Dockerfile
+
+  denormalizedapp:
+    image: denormalizedapp
+    build:
+      context: .
+      dockerfile: DenormalizedApp/Dockerfile
+
+  performancecomparison:
+    image: performancecomparison
+    build:
+      context: .
+      dockerfile: PerformanceComparison/Dockerfile
+
